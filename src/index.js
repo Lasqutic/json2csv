@@ -1,6 +1,5 @@
 const fsp = require('fs').promises;
 const fs = require('fs');
-const path = require('path');
 const zlib = require('zlib');
 
 class Json2csv {
@@ -23,7 +22,7 @@ class Json2csv {
 
         } catch (err) {
 
-            console.log(err);
+            console.log( 'Error creating CSV:', err.message);
         }
     }
 
@@ -58,38 +57,46 @@ class Archiver {
         this.algorithm = algorithm || 'gzip';
     }
 
-    archive(pathToFile, outputPath) {
-
-        return new Promise((resolve) => {
-            const source = fs.createReadStream(pathToFile);
-            const destination = fs.createWriteStream(outputPath);
-            const algorithm = this.algorithm === 'gzip'
-                ? zlib.createGzip()
-                : zlib.createDeflate();
-
-            source.pipe(algorithm).pipe(destination);
-
-            destination.on('finish', () => {
-                console.log('Archive created');
-                resolve();
-            });
-        });
+    async archive(pathToFile, outputPath) {
+        console.log(`Starting archiving: ${pathToFile} in ${outputPath}`);
+        try {
+            await this.#pipeWithCompression(
+                pathToFile,
+                outputPath,
+                this.algorithm === 'gzip' ? zlib.createGzip() : zlib.createDeflate()
+            );
+            console.log('Archive created successfully');
+        } catch (error) {
+            console.error('Error during archiving:', error);
+        }
     }
 
-    unArchive(pathToFile, outputPath) {
-        return new Promise((resolve) => {
+    async unArchive(pathToFile, outputPath) {
+        console.log(`Starting unarchiving: ${pathToFile} in ${outputPath}`);
+        try {
+            await this.#pipeWithCompression(
+                pathToFile,
+                outputPath,
+                this.algorithm === 'gzip' ? zlib.createGunzip() : zlib.createInflate()
+            );
+            console.log('Unarchive completed successfully');
+        } catch (error) {
+            console.error('Error during unarchiving:', error);
+        }
+    }
+
+    async #pipeWithCompression(pathToFile, outputPath, algorithm) {
+        return new Promise((resolve, reject) => {
             const source = fs.createReadStream(pathToFile);
             const destination = fs.createWriteStream(outputPath);
-            const algorithm = this.algorithm === 'gzip'
-                ? zlib.createGunzip()
-                : zlib.createInflate();
 
             source.pipe(algorithm).pipe(destination);
 
             destination.on('finish', () => {
-                console.log('Archive unarchived');
                 resolve();
             });
+            source.on('error', reject);
+            destination.on('error', reject);
         });
     }
 }

@@ -46,11 +46,15 @@ The file at `./data/comments.json` with the following contents:
 ### Console output:
 
 ```
-CSV created
-Archive created
-Archive unarchived
-Archive created
-Archive unarchived
+CSV created 
+Starting archiving: ./data/output.csv in ./data/output.gz
+Archive created successfully
+Starting unarchiving: ./data/output.gz in ./data/outputgz.csv
+Unarchive completed successfully
+Starting archiving: ./data/output.csv in ./data/output.deflate
+Archive created successfully
+Starting unarchiving: ./data/output.deflate in ./data/outputdef.csv
+Unarchive completed successfully
 ```
 
 ### Output CSV file:
